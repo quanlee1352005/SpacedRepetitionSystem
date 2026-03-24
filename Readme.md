@@ -5,9 +5,9 @@
    - Mã số sinh viên: 3120223155
    - Trường: ĐH Sư phạm - ĐH Đà Nẵng
 2. 
-   - Họ và tên:
-   - Mã số sinh viên: 
-   - Trường:
+   - Họ và tên: Lê Quang An
+   - Mã số sinh viên: 3120223001
+   - Trường: ĐH Sư phạm - ĐH Đà Nẵng 
 3. 
    - Họ và tên:
    - Mã số sinh viên: 
