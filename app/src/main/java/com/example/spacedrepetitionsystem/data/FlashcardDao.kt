@@ -13,7 +13,7 @@ interface FlashcardDao {
     fun getAllCards(): Flow<List<Flashcard>>
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
-    suspend fun insertCard(flashcard: Flashcard)
+    suspend fun insertCard(flashcard: Flashcard): Long // Trả về ID để dùng cho đồng bộ
 
     @Update
     suspend fun updateCard(flashcard: Flashcard)
