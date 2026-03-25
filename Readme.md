@@ -1,4 +1,4 @@
-# <Spaced Repetition System> Đề tài:  19 - Học tập qua Flash
+# <Spaced Repetition System> Đề tài:  19 - Học tập qua Flashcard
 ## Thông tin nhóm thực hiện : nhóm 8
 1.
    - Họ và tên: Lê Anh Quân
