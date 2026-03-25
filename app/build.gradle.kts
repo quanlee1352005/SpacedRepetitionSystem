@@ -5,7 +5,7 @@ plugins {
     alias(libs.plugins.kotlin.android)
     alias(libs.plugins.kotlin.compose)
     alias(libs.plugins.ksp)
-    alias(libs.plugins.google.services) // Plugin Google Services
+    alias(libs.plugins.google.services)
 }
 
 android {
@@ -52,6 +52,9 @@ dependencies {
     implementation(libs.androidx.compose.ui.graphics)
     implementation(libs.androidx.compose.ui.tooling.preview)
     implementation(libs.androidx.compose.material3)
+    
+    // Thêm thư viện Icon mở rộng để dùng CloudDownload và VolumeUp
+    implementation(libs.androidx.compose.material.icons.extended)
 
     // Room Database
     implementation(libs.androidx.room.runtime)

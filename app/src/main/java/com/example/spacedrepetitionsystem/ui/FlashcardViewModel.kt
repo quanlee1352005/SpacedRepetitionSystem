@@ -39,9 +39,6 @@ class FlashcardViewModel(private val repository: FlashcardRepository) : ViewMode
         }
     }
 
-    /**
-     * Tải dữ liệu từ Cloud về máy (Dành cho thiết bị mới)
-     */
     fun syncFromCloud() {
         viewModelScope.launch {
             repository.fetchFromCloud()

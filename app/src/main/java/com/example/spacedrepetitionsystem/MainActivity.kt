@@ -11,6 +11,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
+import androidx.compose.material.icons.automirrored.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -36,13 +37,8 @@ class MainActivity : ComponentActivity(), TextToSpeech.OnInitListener {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        
         tts = TextToSpeech(this, this)
-        
-        // 1. Đăng nhập ẩn danh để có UID đồng bộ Firebase
         signInAnonymously()
-        
-        // 2. Khởi chạy WorkManager
         setupWorkManager()
 
         val database by lazy { AppDatabase.getDatabase(this) }
@@ -106,9 +102,8 @@ fun MainScreen(viewModel: FlashcardViewModel, onStartReview: () -> Unit) {
             TopAppBar(
                 title = { Text("Flashcard SRS") },
                 actions = {
-                    // Nút đồng bộ từ Cloud về máy
                     IconButton(onClick = { viewModel.syncFromCloud() }) {
-                        Icon(Icons.Default.CloudDownload, contentDescription = "Sync from Cloud")
+                        Icon(imageVector = Icons.Default.CloudDownload, contentDescription = "Sync from Cloud")
                     }
                 }
             ) 
@@ -144,6 +139,7 @@ fun MainScreen(viewModel: FlashcardViewModel, onStartReview: () -> Unit) {
     }
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ReviewScreen(viewModel: FlashcardViewModel, onSpeak: (String) -> Unit, onFinish: () -> Unit) {
     val allCards by viewModel.allCards.collectAsState()
@@ -167,7 +163,7 @@ fun ReviewScreen(viewModel: FlashcardViewModel, onSpeak: (String) -> Unit, onFin
                             Column(horizontalAlignment = Alignment.CenterHorizontally) {
                                 Text(text = if (showBack) currentCard.back else currentCard.front, style = MaterialTheme.typography.headlineMedium)
                                 IconButton(onClick = { onSpeak(if (showBack) currentCard.back else currentCard.front) }) {
-                                    Icon(Icons.Default.VolumeUp, contentDescription = "Speak")
+                                    Icon(imageVector = Icons.Default.VolumeUp, contentDescription = "Speak")
                                 }
                             }
                         }
@@ -213,6 +209,6 @@ fun AddCardDialog(onDismiss: () -> Unit, onConfirm: (String, String) -> Unit) {
                 OutlinedTextField(value = back, onValueChange = { back = it }, label = { Text("Mặt sau") })
             }
         },
-        confirmButton = { Button(onClick = { onConfirm(front, back) }) { Text("Lưu") } }
+        confirmButton = { Button(onClick = { if (front.isNotBlank() && back.isNotBlank()) onConfirm(front, back) }) { Text("Lưu") } }
     )
 }
