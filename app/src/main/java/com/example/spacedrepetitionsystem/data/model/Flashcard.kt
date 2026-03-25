@@ -1,11 +1,15 @@
 package com.example.spacedrepetitionsystem.data.model
 
+import androidx.room.Entity
+import androidx.room.PrimaryKey
+
 /**
  * Model Flashcard cho hệ thống SRS.
  * Bao gồm các trường cần thiết cho thuật toán SM-2.
  */
+@Entity(tableName = "flashcards")
 data class Flashcard(
-    val id: Int = 0,
+    @PrimaryKey(autoGenerate = true) val id: Int = 0,
     val front: String,              // Câu hỏi hoặc từ vựng
     val back: String,               // Đáp án hoặc định nghĩa
     
