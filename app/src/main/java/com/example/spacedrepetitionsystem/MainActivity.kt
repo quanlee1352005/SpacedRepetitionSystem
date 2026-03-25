@@ -1,6 +1,7 @@
 package com.example.spacedrepetitionsystem
 
 import android.os.Bundle
+import android.speech.tts.TextToSpeech
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.viewModels
@@ -10,6 +11,7 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.PlayArrow
+import androidx.compose.material.icons.filled.VolumeUp
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -21,10 +23,17 @@ import com.example.spacedrepetitionsystem.data.model.Flashcard
 import com.example.spacedrepetitionsystem.ui.FlashcardViewModel
 import com.example.spacedrepetitionsystem.ui.FlashcardViewModelFactory
 import com.example.spacedrepetitionsystem.ui.theme.SpacedRepetitionSystemTheme
+import java.util.*
 
-class MainActivity : ComponentActivity() {
+class MainActivity : ComponentActivity(), TextToSpeech.OnInitListener {
+    private var tts: TextToSpeech? = null
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        
+        // Khởi tạo TextToSpeech
+        tts = TextToSpeech(this, this)
+
         val database by lazy { AppDatabase.getDatabase(this) }
         val repository by lazy { FlashcardRepository(database.flashcardDao()) }
         val viewModel: FlashcardViewModel by viewModels { FlashcardViewModelFactory(repository) }
@@ -36,6 +45,7 @@ class MainActivity : ComponentActivity() {
                 if (isReviewing) {
                     ReviewScreen(
                         viewModel = viewModel,
+                        onSpeak = { text -> speak(text) },
                         onFinish = { isReviewing = false }
                     )
                 } else {
@@ -46,6 +56,22 @@ class MainActivity : ComponentActivity() {
                 }
             }
         }
+    }
+
+    override fun onInit(status: Int) {
+        if (status == TextToSpeech.SUCCESS) {
+            tts?.language = Locale.US
+        }
+    }
+
+    private fun speak(text: String) {
+        tts?.speak(text, TextToSpeech.QUEUE_FLUSH, null, null)
+    }
+
+    override fun onDestroy() {
+        tts?.stop()
+        tts?.shutdown()
+        super.onDestroy()
     }
 }
 
@@ -73,12 +99,6 @@ fun MainScreen(viewModel: FlashcardViewModel, onStartReview: () -> Unit) {
         }
     ) { innerPadding ->
         Column(modifier = Modifier.padding(innerPadding).fillMaxSize()) {
-            Text(
-                text = "Danh sách thẻ (${flashcards.size})",
-                style = MaterialTheme.typography.headlineSmall,
-                modifier = Modifier.padding(16.dp)
-            )
-            
             if (flashcards.isEmpty()) {
                 Text(text = "Chưa có thẻ nào.", modifier = Modifier.padding(16.dp))
             } else {
@@ -103,10 +123,9 @@ fun MainScreen(viewModel: FlashcardViewModel, onStartReview: () -> Unit) {
 }
 
 @Composable
-fun ReviewScreen(viewModel: FlashcardViewModel, onFinish: () -> Unit) {
+fun ReviewScreen(viewModel: FlashcardViewModel, onSpeak: (String) -> Unit, onFinish: () -> Unit) {
     val allCards by viewModel.allCards.collectAsState()
     val currentTime = System.currentTimeMillis()
-    // Lọc các thẻ đến hạn học (nextDueDate <= hiện tại)
     val reviewList = remember(allCards) {
         allCards.filter { it.nextDueDate <= currentTime }
     }
@@ -122,7 +141,7 @@ fun ReviewScreen(viewModel: FlashcardViewModel, onFinish: () -> Unit) {
         Box(modifier = Modifier.padding(innerPadding).fillMaxSize(), contentAlignment = Alignment.Center) {
             if (reviewList.isEmpty() || currentIndex >= reviewList.size) {
                 Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                    Text("Tuyệt vời! Bạn đã hoàn thành bài học hôm nay.")
+                    Text("Hoàn thành bài học hôm nay!")
                     Button(onClick = onFinish, modifier = Modifier.padding(top = 16.dp)) {
                         Text("Quay lại")
                     }
@@ -138,29 +157,23 @@ fun ReviewScreen(viewModel: FlashcardViewModel, onFinish: () -> Unit) {
                         onClick = { showBack = !showBack }
                     ) {
                         Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                            Text(
-                                text = if (showBack) currentCard.back else currentCard.front,
-                                style = MaterialTheme.typography.headlineMedium
-                            )
+                            Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                                Text(
+                                    text = if (showBack) currentCard.back else currentCard.front,
+                                    style = MaterialTheme.typography.headlineMedium
+                                )
+                                IconButton(onClick = { onSpeak(if (showBack) currentCard.back else currentCard.front) }) {
+                                    Icon(Icons.Default.VolumeUp, contentDescription = "Speak")
+                                }
+                            }
                         }
                     }
-                    
-                    Text(
-                        text = if (showBack) "Nhấn vào thẻ để xem câu hỏi" else "Nhấn vào thẻ để xem đáp án",
-                        style = MaterialTheme.typography.bodySmall,
-                        modifier = Modifier.padding(top = 8.dp)
-                    )
 
                     if (showBack) {
-                        Text(
-                            text = "Bạn nhớ thẻ này ở mức nào?",
-                            modifier = Modifier.padding(top = 24.dp, bottom = 8.dp)
-                        )
                         Row(
-                            modifier = Modifier.fillMaxWidth(),
+                            modifier = Modifier.fillMaxWidth().padding(top = 24.dp),
                             horizontalArrangement = Arrangement.SpaceEvenly
                         ) {
-                            // Các mức độ đánh giá: 1 (Quên) -> 5 (Rất nhớ)
                             listOf(1, 3, 5).forEach { quality ->
                                 Button(onClick = {
                                     viewModel.reviewCard(currentCard, quality)
