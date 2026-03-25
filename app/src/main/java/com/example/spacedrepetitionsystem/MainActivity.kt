@@ -2,6 +2,7 @@ package com.example.spacedrepetitionsystem
 
 import android.os.Bundle
 import android.speech.tts.TextToSpeech
+import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.viewModels
@@ -9,9 +10,7 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Add
-import androidx.compose.material.icons.filled.PlayArrow
-import androidx.compose.material.icons.filled.VolumeUp
+import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -22,22 +21,28 @@ import androidx.work.PeriodicWorkRequestBuilder
 import androidx.work.WorkManager
 import com.example.spacedrepetitionsystem.data.AppDatabase
 import com.example.spacedrepetitionsystem.data.FlashcardRepository
+import com.example.spacedrepetitionsystem.data.model.Flashcard
 import com.example.spacedrepetitionsystem.ui.FlashcardViewModel
 import com.example.spacedrepetitionsystem.ui.FlashcardViewModelFactory
 import com.example.spacedrepetitionsystem.ui.theme.SpacedRepetitionSystemTheme
 import com.example.spacedrepetitionsystem.worker.ReminderWorker
+import com.google.firebase.auth.FirebaseAuth
 import java.util.*
 import java.util.concurrent.TimeUnit
 
 class MainActivity : ComponentActivity(), TextToSpeech.OnInitListener {
     private var tts: TextToSpeech? = null
+    private val auth = FirebaseAuth.getInstance()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         
         tts = TextToSpeech(this, this)
         
-        // Khởi chạy WorkManager để nhắc nhở học tập (Chạy mỗi 8 tiếng)
+        // 1. Đăng nhập ẩn danh để có UID đồng bộ Firebase
+        signInAnonymously()
+        
+        // 2. Khởi chạy WorkManager
         setupWorkManager()
 
         val database by lazy { AppDatabase.getDatabase(this) }
@@ -56,9 +61,18 @@ class MainActivity : ComponentActivity(), TextToSpeech.OnInitListener {
         }
     }
 
+    private fun signInAnonymously() {
+        if (auth.currentUser == null) {
+            auth.signInAnonymously().addOnCompleteListener { task ->
+                if (task.isSuccessful) {
+                    Toast.makeText(this, "Đã kết nối Cloud!", Toast.LENGTH_SHORT).show()
+                }
+            }
+        }
+    }
+
     private fun setupWorkManager() {
-        val workRequest = PeriodicWorkRequestBuilder<ReminderWorker>(8, TimeUnit.HOURS)
-            .build()
+        val workRequest = PeriodicWorkRequestBuilder<ReminderWorker>(8, TimeUnit.HOURS).build()
         WorkManager.getInstance(this).enqueueUniquePeriodicWork(
             "SRS_Reminder_Work",
             ExistingPeriodicWorkPolicy.KEEP,
@@ -88,7 +102,17 @@ fun MainScreen(viewModel: FlashcardViewModel, onStartReview: () -> Unit) {
     var showAddDialog by remember { mutableStateOf(false) }
 
     Scaffold(
-        topBar = { TopAppBar(title = { Text("Flashcard SRS") }) },
+        topBar = { 
+            TopAppBar(
+                title = { Text("Flashcard SRS") },
+                actions = {
+                    // Nút đồng bộ từ Cloud về máy
+                    IconButton(onClick = { viewModel.syncFromCloud() }) {
+                        Icon(Icons.Default.CloudDownload, contentDescription = "Sync from Cloud")
+                    }
+                }
+            ) 
+        },
         floatingActionButton = {
             Column {
                 FloatingActionButton(onClick = onStartReview, containerColor = MaterialTheme.colorScheme.primaryContainer, modifier = Modifier.padding(bottom = 8.dp)) {
@@ -169,6 +193,9 @@ fun FlashcardItem(card: Flashcard) {
         Column(modifier = Modifier.padding(16.dp)) {
             Text(text = "Q: ${card.front}")
             Text(text = "A: ${card.back}", color = MaterialTheme.colorScheme.secondary)
+            if (card.isSynced) {
+                Text(text = "Đã đồng bộ", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.primary)
+            }
         }
     }
 }

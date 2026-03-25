@@ -13,14 +13,12 @@ import kotlinx.coroutines.launch
 
 class FlashcardViewModel(private val repository: FlashcardRepository) : ViewModel() {
 
-    // Danh sách toàn bộ thẻ học
     val allCards: StateFlow<List<Flashcard>> = repository.allCards.stateIn(
         scope = viewModelScope,
         started = SharingStarted.WhileSubscribed(5000),
         initialValue = emptyList()
     )
 
-    // Thêm một thẻ mới
     fun addFlashcard(front: String, back: String) {
         viewModelScope.launch {
             val newCard = Flashcard(front = front, back = back)
@@ -28,7 +26,6 @@ class FlashcardViewModel(private val repository: FlashcardRepository) : ViewMode
         }
     }
 
-    // Cập nhật khi người dùng đánh giá mức độ nhớ
     fun reviewCard(flashcard: Flashcard, quality: Int) {
         viewModelScope.launch {
             val updatedCard = SM2Calculator.calculate(flashcard, quality)
@@ -36,15 +33,22 @@ class FlashcardViewModel(private val repository: FlashcardRepository) : ViewMode
         }
     }
 
-    // Xóa thẻ
     fun deleteCard(flashcard: Flashcard) {
         viewModelScope.launch {
             repository.delete(flashcard)
         }
     }
+
+    /**
+     * Tải dữ liệu từ Cloud về máy (Dành cho thiết bị mới)
+     */
+    fun syncFromCloud() {
+        viewModelScope.launch {
+            repository.fetchFromCloud()
+        }
+    }
 }
 
-// Factory để khởi tạo ViewModel với Repository
 class FlashcardViewModelFactory(private val repository: FlashcardRepository) : ViewModelProvider.Factory {
     override fun <T : ViewModel> create(modelClass: Class<T>): T {
         if (modelClass.isAssignableFrom(FlashcardViewModel::class.java)) {
