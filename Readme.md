@@ -9,9 +9,9 @@
    - Mã số sinh viên: 3120223001
    - Trường: ĐH Sư phạm - ĐH Đà Nẵng 
 3. 
-   - Họ và tên:
-   - Mã số sinh viên: 
-   - Trường:
+   - Họ và tên: Trần Quang Cầu
+   - Mã số sinh viên: 3120223017   
+   - Trường: ĐH Sư phạm - ĐH Đà Nẵng 
 4. 
     - Họ và tên:
     - Mã số sinh viên: 
