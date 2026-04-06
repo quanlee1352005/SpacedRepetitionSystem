@@ -44,6 +44,7 @@ class MainActivity : ComponentActivity(), TextToSpeech.OnInitListener {
 
                 when (currentScreen) {
                     "dashboard" -> DashboardScreen(
+                        viewModel = viewModel, // Đã thêm viewModel vào đây
                         userName = auth.currentUser?.displayName ?: "Minh",
                         onStartReview = { currentScreen = "review" },
                         onAddCard = { showAddDialog = true },
@@ -62,8 +63,8 @@ class MainActivity : ComponentActivity(), TextToSpeech.OnInitListener {
                 if (showAddDialog) {
                     AddCardDialog(
                         onDismiss = { showAddDialog = false },
-                        onConfirm = { front, back -> 
-                            viewModel.addFlashcard(front, back)
+                        onConfirm = { front, back, deck -> 
+                            viewModel.addFlashcard(front, back, deck) // Đã truyền đủ 3 tham số
                             showAddDialog = false 
                         }
                     )
@@ -108,18 +109,30 @@ class MainActivity : ComponentActivity(), TextToSpeech.OnInitListener {
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun AddCardDialog(onDismiss: () -> Unit, onConfirm: (String, String) -> Unit) {
+fun AddCardDialog(onDismiss: () -> Unit, onConfirm: (String, String, String) -> Unit) {
     var front by remember { mutableStateOf("") }
     var back by remember { mutableStateOf("") }
+    var deck by remember { mutableStateOf("Mặc định") } // Thêm state cho bộ thẻ
+
     AlertDialog(
         onDismissRequest = onDismiss,
         title = { Text("Thêm thẻ mới") },
         text = {
             androidx.compose.foundation.layout.Column {
-                OutlinedTextField(value = front, onValueChange = { front = it }, label = { Text("Mặt trước") })
-                OutlinedTextField(value = back, onValueChange = { back = it }, label = { Text("Mặt sau") })
+                OutlinedTextField(value = front, onValueChange = { front = it }, label = { Text("Mặt trước (Câu hỏi)") })
+                OutlinedTextField(value = back, onValueChange = { back = it }, label = { Text("Mặt sau (Đáp án)") })
+                OutlinedTextField(value = deck, onValueChange = { deck = it }, label = { Text("Tên bộ thẻ") })
             }
         },
-        confirmButton = { Button(onClick = { if (front.isNotBlank() && back.isNotBlank()) onConfirm(front, back) }) { Text("Lưu") } }
+        confirmButton = { 
+            Button(onClick = { 
+                if (front.isNotBlank() && back.isNotBlank() && deck.isNotBlank()) {
+                    onConfirm(front, back, deck)
+                }
+            }) { Text("Lưu") } 
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss) { Text("Hủy") }
+        }
     )
 }
