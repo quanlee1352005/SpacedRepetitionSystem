@@ -6,7 +6,7 @@ import androidx.room.Room
 import androidx.room.RoomDatabase
 import com.example.spacedrepetitionsystem.data.model.Flashcard
 
-@Database(entities = [Flashcard::class], version = 1, exportSchema = false)
+@Database(entities = [Flashcard::class], version = 2, exportSchema = false) // Tăng version lên 2
 abstract class AppDatabase : RoomDatabase() {
     abstract fun flashcardDao(): FlashcardDao
 
@@ -19,7 +19,9 @@ abstract class AppDatabase : RoomDatabase() {
                     context.applicationContext,
                     AppDatabase::class.java,
                     "flashcard_database"
-                ).build()
+                )
+                .fallbackToDestructiveMigration() // Cho phép xóa data cũ khi đổi cấu trúc
+                .build()
                 INSTANCE = instance
                 instance
             }

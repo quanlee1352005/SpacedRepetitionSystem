@@ -45,7 +45,7 @@ class MainActivity : ComponentActivity(), TextToSpeech.OnInitListener {
                 when (currentScreen) {
                     "dashboard" -> DashboardScreen(
                         viewModel = viewModel, // Đã thêm viewModel vào đây
-                        userName = auth.currentUser?.displayName ?: "Minh",
+                        userName = auth.currentUser?.displayName ?: "Quan",
                         onStartReview = { currentScreen = "review" },
                         onAddCard = { showAddDialog = true },
                         onSync = { 
