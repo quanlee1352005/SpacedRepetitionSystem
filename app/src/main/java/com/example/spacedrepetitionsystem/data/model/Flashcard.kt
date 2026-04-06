@@ -8,15 +8,15 @@ data class Flashcard(
     @PrimaryKey(autoGenerate = true) val id: Int = 0,
     val front: String = "",
     val back: String = "",
+    val deckName: String = "Tiếng Anh Giao Tiếp", // Tên bộ thẻ
+    val colorHex: Long = 0xFF42A5F5,           // Màu sắc (Ví dụ: Xanh dương)
     var interval: Int = 0,
     var repetitions: Int = 0,
     var easeFactor: Double = 2.5,
     var nextDueDate: Long = System.currentTimeMillis(),
-    
-    // Các trường phục vụ đồng bộ Firebase
     var isSynced: Boolean = false,
-    var firestoreId: String = "" // Để map giữa Room và Firestore
+    var firestoreId: String = ""
 ) {
-    // Constructor không đối số cho Firebase
-    constructor() : this(0, "", "", 0, 0, 2.5, System.currentTimeMillis(), false, "")
+    // Constructor cho Firebase
+    constructor() : this(0, "", "", "Tiếng Anh Giao Tiếp", 0xFF42A5F5, 0, 0, 2.5, System.currentTimeMillis(), false, "")
 }
