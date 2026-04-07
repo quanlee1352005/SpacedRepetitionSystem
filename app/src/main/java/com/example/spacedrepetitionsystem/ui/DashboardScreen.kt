@@ -20,7 +20,6 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun DashboardScreen(
     viewModel: FlashcardViewModel,
@@ -31,40 +30,35 @@ fun DashboardScreen(
 ) {
     val decks by viewModel.decks.collectAsState()
 
-    Scaffold(
-        bottomBar = { AppBottomNavigation() }
-    ) { padding ->
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(padding)
-                .background(Color(0xFFFDEFD9))
-        ) {
-            HeaderSection(userName, onSync)
-            QuickActionsSection(onStartReview, onAddCard)
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(Color(0xFFFDEFD9))
+    ) {
+        HeaderSection(userName, onSync)
+        QuickActionsSection(onStartReview, onAddCard)
 
-            Text(
-                text = "Các bộ thẻ của bạn",
-                style = MaterialTheme.typography.titleLarge,
-                modifier = Modifier.padding(horizontal = 20.dp, vertical = 10.dp),
-                fontWeight = FontWeight.Bold
-            )
+        Text(
+            text = "Các bộ thẻ của bạn",
+            style = MaterialTheme.typography.titleLarge,
+            modifier = Modifier.padding(horizontal = 20.dp, vertical = 10.dp),
+            fontWeight = FontWeight.Bold
+        )
 
-            if (decks.isEmpty()) {
-                Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                    Text("Chưa có bộ thẻ nào. Hãy thêm thẻ mới!")
-                }
-            } else {
-                LazyVerticalGrid(
-                    columns = GridCells.Fixed(2),
-                    contentPadding = PaddingValues(16.dp),
-                    horizontalArrangement = Arrangement.spacedBy(16.dp),
-                    verticalArrangement = Arrangement.spacedBy(16.dp),
-                    modifier = Modifier.weight(1f)
-                ) {
-                    items(decks) { deck ->
-                        DeckCard(deck)
-                    }
+        if (decks.isEmpty()) {
+            Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                Text("Chưa có bộ thẻ nào. Hãy thêm thẻ mới!")
+            }
+        } else {
+            LazyVerticalGrid(
+                columns = GridCells.Fixed(2),
+                contentPadding = PaddingValues(16.dp),
+                horizontalArrangement = Arrangement.spacedBy(16.dp),
+                verticalArrangement = Arrangement.spacedBy(16.dp),
+                modifier = Modifier.weight(1f)
+            ) {
+                items(decks) { deck ->
+                    DeckCard(deck)
                 }
             }
         }
@@ -102,7 +96,6 @@ fun DeckCard(deck: DeckInfo) {
     }
 }
 
-// Các Component HeaderSection, QuickActionsSection, AppBottomNavigation giữ nguyên như cũ...
 @Composable
 fun HeaderSection(userName: String, onSync: () -> Unit) {
     Row(modifier = Modifier.fillMaxWidth().padding(20.dp), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
@@ -129,16 +122,5 @@ fun QuickActionsSection(onStartReview: () -> Unit, onAddCard: () -> Unit) {
                 Text(text = "Thêm thẻ", fontWeight = FontWeight.Bold, fontSize = 14.sp)
             }
         }
-    }
-}
-
-@Composable
-fun AppBottomNavigation() {
-    NavigationBar(containerColor = Color.White) {
-        NavigationBarItem(selected = true, onClick = {}, icon = { Icon(Icons.Default.Home, "Home") }, label = { Text("Trang chủ") })
-        NavigationBarItem(selected = false, onClick = {}, icon = { Icon(Icons.Default.Book, "Library") }, label = { Text("Thư viện") })
-        NavigationBarItem(selected = false, onClick = {}, icon = { Icon(Icons.Default.AddCircle, "Add", tint = Color(0xFFE67E22), modifier = Modifier.size(40.dp)) }, label = {})
-        NavigationBarItem(selected = false, onClick = {}, icon = { Icon(Icons.Default.CheckCircle, "Practice") }, label = { Text("Luyện tập") })
-        NavigationBarItem(selected = false, onClick = {}, icon = { Icon(Icons.Default.Person, "Account") }, label = { Text("Tài khoản") })
     }
 }
