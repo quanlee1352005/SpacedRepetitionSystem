@@ -66,7 +66,7 @@ class MainActivity : ComponentActivity(), TextToSpeech.OnInitListener {
                             when (currentTab) {
                                 "home" -> DashboardScreen(
                                     viewModel = viewModel,
-                                    userName = auth.currentUser?.displayName ?: "Quan",
+                                    userName = auth.currentUser?.displayName ?: "Flashcard Xin Chào",
                                     onStartReview = { isReviewing = true },
                                     onAddCard = { showAddDialog = true },
                                     onSync = { viewModel.syncFromCloud() }
@@ -74,7 +74,7 @@ class MainActivity : ComponentActivity(), TextToSpeech.OnInitListener {
                                 "library" -> LibraryScreen(viewModel)
                                 "practice" -> PracticeScreen(viewModel)
                                 "account" -> AccountScreen(
-                                    userName = auth.currentUser?.displayName ?: "Quan",
+                                    userName = auth.currentUser?.displayName ?: "Flashcard Xin Chào",
                                     onSync = { viewModel.syncFromCloud() }
                                 )
                             }
