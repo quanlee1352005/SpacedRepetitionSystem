@@ -50,7 +50,7 @@ fun AccountScreen(
 fun AuthForm(onAuthSuccess: () -> Unit) {
     var email by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
-    var isRegisterMode by remember { mutableStateOf(false) } // Chuyển đổi giữa Đăng nhập/Đăng ký
+    var isRegisterMode by remember { mutableStateOf(false) }
     val auth = FirebaseAuth.getInstance()
     val context = LocalContext.current
 
@@ -90,13 +90,11 @@ fun AuthForm(onAuthSuccess: () -> Unit) {
             }
 
             if (isRegisterMode) {
-                // Xử lý Đăng ký
                 auth.createUserWithEmailAndPassword(email, password).addOnCompleteListener {
                     if (it.isSuccessful) onAuthSuccess()
                     else Toast.makeText(context, "Đăng ký lỗi: ${it.exception?.message}", Toast.LENGTH_LONG).show()
                 }
             } else {
-                // Xử lý Đăng nhập
                 auth.signInWithEmailAndPassword(email, password).addOnCompleteListener {
                     if (it.isSuccessful) onAuthSuccess()
                     else Toast.makeText(context, "Đăng nhập lỗi: ${it.exception?.message}", Toast.LENGTH_LONG).show()
@@ -126,7 +124,7 @@ fun AuthForm(onAuthSuccess: () -> Unit) {
 }
 
 @Composable
-fun UserInfoSection(email: String, onSync: () -> Unit, onLogout: () -> Unit) {
+fun ColumnScope.UserInfoSection(email: String, onSync: () -> Unit, onLogout: () -> Unit) {
     Surface(modifier = Modifier.size(100.dp).clip(CircleShape), color = Color(0xFFFDEFD9)) {
         Icon(Icons.Default.Person, contentDescription = null, modifier = Modifier.size(64.dp).padding(16.dp), tint = Color(0xFFE67E22))
     }
