@@ -45,6 +45,7 @@ class MainActivity : ComponentActivity(), TextToSpeech.OnInitListener {
                 var currentTab by remember { mutableStateOf("home") }
                 var isReviewing by remember { mutableStateOf(false) }
                 var showAddDialog by remember { mutableStateOf(false) }
+                var prefilledDeckName by remember { mutableStateOf("") }
 
                 if (isReviewing) {
                     ReviewScreen(
@@ -58,7 +59,10 @@ class MainActivity : ComponentActivity(), TextToSpeech.OnInitListener {
                             AppBottomNavigation(
                                 currentTab = currentTab,
                                 onTabSelected = { currentTab = it },
-                                onAddClick = { showAddDialog = true }
+                                onAddClick = { 
+                                    prefilledDeckName = ""
+                                    showAddDialog = true 
+                                }
                             )
                         }
                     ) { innerPadding ->
@@ -66,15 +70,22 @@ class MainActivity : ComponentActivity(), TextToSpeech.OnInitListener {
                             when (currentTab) {
                                 "home" -> DashboardScreen(
                                     viewModel = viewModel,
-                                    userName = auth.currentUser?.displayName ?: "Flashcard Xin Chào",
+                                    userName = auth.currentUser?.email ?: "Minh",
                                     onStartReview = { isReviewing = true },
-                                    onAddCard = { showAddDialog = true },
+                                    onCreateNewDeck = { 
+                                        prefilledDeckName = ""
+                                        showAddDialog = true 
+                                    },
+                                    onAddCardToDeck = { deckName ->
+                                        prefilledDeckName = deckName
+                                        showAddDialog = true
+                                    },
                                     onSync = { viewModel.syncFromCloud() }
                                 )
                                 "library" -> LibraryScreen(viewModel)
                                 "practice" -> PracticeScreen(viewModel)
                                 "account" -> AccountScreen(
-                                    userName = auth.currentUser?.displayName ?: "Flashcard Xin Chào",
+                                    userName = auth.currentUser?.email ?: "Minh",
                                     onSync = { viewModel.syncFromCloud() }
                                 )
                             }
@@ -84,6 +95,7 @@ class MainActivity : ComponentActivity(), TextToSpeech.OnInitListener {
 
                 if (showAddDialog) {
                     AddCardDialog(
+                        initialDeckName = prefilledDeckName,
                         onDismiss = { showAddDialog = false },
                         onConfirm = { front, back, deck ->
                             viewModel.addFlashcard(front, back, deck)
@@ -148,7 +160,6 @@ fun AppBottomNavigation(
             icon = { Icon(Icons.Default.Book, "Thư viện") },
             label = { Text("Thư viện") }
         )
-        // Nút (+) đặc biệt ở giữa
         Box(modifier = Modifier.weight(1f), contentAlignment = androidx.compose.ui.Alignment.Center) {
             FloatingActionButton(
                 onClick = onAddClick,
@@ -177,19 +188,24 @@ fun AppBottomNavigation(
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun AddCardDialog(onDismiss: () -> Unit, onConfirm: (String, String, String) -> Unit) {
+fun AddCardDialog(initialDeckName: String, onDismiss: () -> Unit, onConfirm: (String, String, String) -> Unit) {
     var front by remember { mutableStateOf("") }
     var back by remember { mutableStateOf("") }
-    var deck by remember { mutableStateOf("Mặc định") }
+    var deck by remember { mutableStateOf(if (initialDeckName.isEmpty()) "Mặc định" else initialDeckName) }
 
     AlertDialog(
         onDismissRequest = onDismiss,
-        title = { Text("Thêm thẻ mới") },
+        title = { Text(if (initialDeckName.isEmpty()) "Tạo bộ thẻ mới" else "Thêm thẻ vào bộ $initialDeckName") },
         text = {
             Column {
                 OutlinedTextField(value = front, onValueChange = { front = it }, label = { Text("Mặt trước (Câu hỏi)") })
                 OutlinedTextField(value = back, onValueChange = { back = it }, label = { Text("Mặt sau (Đáp án)") })
-                OutlinedTextField(value = deck, onValueChange = { deck = it }, label = { Text("Tên bộ thẻ") })
+                OutlinedTextField(
+                    value = deck, 
+                    onValueChange = { deck = it }, 
+                    label = { Text("Tên bộ thẻ") },
+                    enabled = initialDeckName.isEmpty() // Không cho sửa tên bộ thẻ nếu nhấn từ bộ cụ thể
+                )
             }
         },
         confirmButton = {

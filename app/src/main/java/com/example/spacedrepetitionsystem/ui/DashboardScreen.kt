@@ -25,7 +25,8 @@ fun DashboardScreen(
     viewModel: FlashcardViewModel,
     userName: String = "Minh",
     onStartReview: () -> Unit,
-    onAddCard: () -> Unit,
+    onCreateNewDeck: () -> Unit,
+    onAddCardToDeck: (String) -> Unit,
     onSync: () -> Unit
 ) {
     val decks by viewModel.decks.collectAsState()
@@ -36,7 +37,9 @@ fun DashboardScreen(
             .background(Color(0xFFFDEFD9))
     ) {
         HeaderSection(userName, onSync)
-        QuickActionsSection(onStartReview, onAddCard)
+        
+        // Quick Actions (Đổi tên thành Tạo bộ thẻ)
+        QuickActionsSection(onStartReview, onCreateNewDeck)
 
         Text(
             text = "Các bộ thẻ của bạn",
@@ -47,7 +50,7 @@ fun DashboardScreen(
 
         if (decks.isEmpty()) {
             Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                Text("Chưa có bộ thẻ nào. Hãy thêm thẻ mới!")
+                Text("Chưa có bộ thẻ nào. Hãy tạo bộ thẻ mới!")
             }
         } else {
             LazyVerticalGrid(
@@ -58,7 +61,7 @@ fun DashboardScreen(
                 modifier = Modifier.weight(1f)
             ) {
                 items(decks) { deck ->
-                    DeckCard(deck)
+                    DeckCard(deck, onClick = { onAddCardToDeck(deck.name) })
                 }
             }
         }
@@ -66,11 +69,14 @@ fun DashboardScreen(
 }
 
 @Composable
-fun DeckCard(deck: DeckInfo) {
+fun DeckCard(deck: DeckInfo, onClick: () -> Unit) {
     Card(
         shape = RoundedCornerShape(20.dp),
         colors = CardDefaults.cardColors(containerColor = Color(deck.color)),
-        modifier = Modifier.fillMaxWidth().height(160.dp),
+        modifier = Modifier
+            .fillMaxWidth()
+            .height(160.dp)
+            .clickable { onClick() },
         elevation = CardDefaults.cardElevation(4.dp)
     ) {
         Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.SpaceBetween) {
@@ -86,7 +92,7 @@ fun DeckCard(deck: DeckInfo) {
                 )
                 Spacer(modifier = Modifier.height(4.dp))
                 Text(
-                    text = if (deck.dueCount > 0) "Cần ôn tập: ${deck.dueCount}" else "Đã hoàn thành",
+                    text = if (deck.dueCount > 0) "Cần ôn tập: ${deck.dueCount}" else "Nhấn để thêm thẻ",
                     color = Color.White,
                     fontSize = 11.sp,
                     fontWeight = FontWeight.Medium
@@ -108,7 +114,7 @@ fun HeaderSection(userName: String, onSync: () -> Unit) {
 }
 
 @Composable
-fun QuickActionsSection(onStartReview: () -> Unit, onAddCard: () -> Unit) {
+fun QuickActionsSection(onStartReview: () -> Unit, onCreateNewDeck: () -> Unit) {
     Row(modifier = Modifier.fillMaxWidth().padding(horizontal = 20.dp), horizontalArrangement = Arrangement.spacedBy(16.dp)) {
         Card(modifier = Modifier.weight(1f).clickable { onStartReview() }, shape = RoundedCornerShape(16.dp), colors = CardDefaults.cardColors(containerColor = Color.White)) {
             Column(modifier = Modifier.padding(16.dp), horizontalAlignment = Alignment.CenterHorizontally) {
@@ -116,10 +122,10 @@ fun QuickActionsSection(onStartReview: () -> Unit, onAddCard: () -> Unit) {
                 Text(text = "Học ngay", fontWeight = FontWeight.Bold, fontSize = 14.sp)
             }
         }
-        Card(modifier = Modifier.weight(1f).clickable { onAddCard() }, shape = RoundedCornerShape(16.dp), colors = CardDefaults.cardColors(containerColor = Color.White)) {
+        Card(modifier = Modifier.weight(1f).clickable { onCreateNewDeck() }, shape = RoundedCornerShape(16.dp), colors = CardDefaults.cardColors(containerColor = Color.White)) {
             Column(modifier = Modifier.padding(16.dp), horizontalAlignment = Alignment.CenterHorizontally) {
                 Icon(Icons.Default.Add, contentDescription = null, tint = Color(0xFFE67E22), modifier = Modifier.size(32.dp))
-                Text(text = "Thêm thẻ", fontWeight = FontWeight.Bold, fontSize = 14.sp)
+                Text(text = "Tạo bộ thẻ", fontWeight = FontWeight.Bold, fontSize = 14.sp)
             }
         }
     }
