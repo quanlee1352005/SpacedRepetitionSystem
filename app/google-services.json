@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "898277091780",
+    "project_id": "spacedrepetitionsystem-54d07",
+    "storage_bucket": "spacedrepetitionsystem-54d07.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:898277091780:android:57c52f2379094b10f81c91",
+        "android_client_info": {
+          "package_name": "com.example.spacedrepetitionsystem"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyADKiUFjF68XezmG7ILEPuVRVO1yFslUpc"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
