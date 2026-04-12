@@ -8,14 +8,15 @@ import androidx.activity.compose.setContent
 import androidx.activity.viewModels
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.Assignment
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import com.example.spacedrepetitionsystem.data.AppDatabase
 import com.example.spacedrepetitionsystem.data.FlashcardRepository
+import com.example.spacedrepetitionsystem.data.model.Flashcard
 import com.example.spacedrepetitionsystem.ui.*
 import com.example.spacedrepetitionsystem.ui.theme.SpacedRepetitionSystemTheme
 import com.example.spacedrepetitionsystem.worker.ReminderWorker
@@ -23,6 +24,8 @@ import com.google.firebase.auth.FirebaseAuth
 import androidx.work.ExistingPeriodicWorkPolicy
 import androidx.work.PeriodicWorkRequestBuilder
 import androidx.work.WorkManager
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.launch
 import java.util.*
 import java.util.concurrent.TimeUnit
 
@@ -46,9 +49,13 @@ class MainActivity : ComponentActivity(), TextToSpeech.OnInitListener {
                 var isReviewing by remember { mutableStateOf(false) }
                 var showAddDialog by remember { mutableStateOf(false) }
                 var prefilledDeckName by remember { mutableStateOf("") }
+                
+                var currentReviewList by remember { mutableStateOf<List<Flashcard>>(emptyList()) }
+                val scope = rememberCoroutineScope()
 
                 if (isReviewing) {
                     ReviewScreen(
+                        reviewList = currentReviewList,
                         viewModel = viewModel,
                         onSpeak = { speak(it) },
                         onFinish = { isReviewing = false }
@@ -70,8 +77,13 @@ class MainActivity : ComponentActivity(), TextToSpeech.OnInitListener {
                             when (currentTab) {
                                 "home" -> DashboardScreen(
                                     viewModel = viewModel,
-                                    userName = auth.currentUser?.email ?: "Minh",
-                                    onStartReview = { isReviewing = true },
+                                    userName = auth.currentUser?.email ?: "Người dùng",
+                                    onStartReview = {
+                                        scope.launch {
+                                            currentReviewList = viewModel.learnCards.first()
+                                            isReviewing = true
+                                        }
+                                    },
                                     onCreateNewDeck = { 
                                         prefilledDeckName = ""
                                         showAddDialog = true 
@@ -83,9 +95,27 @@ class MainActivity : ComponentActivity(), TextToSpeech.OnInitListener {
                                     onSync = { viewModel.syncFromCloud() }
                                 )
                                 "library" -> LibraryScreen(viewModel)
-                                "practice" -> PracticeScreen(viewModel)
+                                "practice" -> PracticeScreen(
+                                    viewModel = viewModel,
+                                    onReviewDifficult = {
+                                        scope.launch {
+                                            currentReviewList = viewModel.reviewDifficultCards.first()
+                                            isReviewing = true
+                                        }
+                                    },
+                                    onLearnNew = {
+                                        scope.launch {
+                                            currentReviewList = viewModel.learnCards.first()
+                                            isReviewing = true
+                                        }
+                                    },
+                                    onStartQuiz = {
+                                        currentReviewList = viewModel.getQuizCards()
+                                        isReviewing = true
+                                    }
+                                )
                                 "account" -> AccountScreen(
-                                    userName = auth.currentUser?.email ?: "Minh",
+                                    userName = auth.currentUser?.email ?: "Người dùng",
                                     onSync = { viewModel.syncFromCloud() }
                                 )
                             }
@@ -147,7 +177,7 @@ fun AppBottomNavigation(
     onTabSelected: (String) -> Unit,
     onAddClick: () -> Unit
 ) {
-    NavigationBar(containerColor = Color.White) {
+    NavigationBar(containerColor = androidx.compose.ui.graphics.Color.White) {
         NavigationBarItem(
             selected = currentTab == "home",
             onClick = { onTabSelected("home") },
@@ -163,8 +193,8 @@ fun AppBottomNavigation(
         Box(modifier = Modifier.weight(1f), contentAlignment = androidx.compose.ui.Alignment.Center) {
             FloatingActionButton(
                 onClick = onAddClick,
-                containerColor = Color(0xFFE67E22),
-                contentColor = Color.White,
+                containerColor = androidx.compose.ui.graphics.Color(0xFFE67E22),
+                contentColor = androidx.compose.ui.graphics.Color.White,
                 shape = androidx.compose.foundation.shape.CircleShape,
                 modifier = Modifier.size(56.dp).offset(y = (-10).dp)
             ) {
@@ -174,7 +204,7 @@ fun AppBottomNavigation(
         NavigationBarItem(
             selected = currentTab == "practice",
             onClick = { onTabSelected("practice") },
-            icon = { Icon(Icons.Default.Assignment, "Luyện tập") },
+            icon = { Icon(Icons.AutoMirrored.Filled.Assignment, "Luyện tập") },
             label = { Text("Luyện tập") }
         )
         NavigationBarItem(
@@ -197,14 +227,14 @@ fun AddCardDialog(initialDeckName: String, onDismiss: () -> Unit, onConfirm: (St
         onDismissRequest = onDismiss,
         title = { Text(if (initialDeckName.isEmpty()) "Tạo bộ thẻ mới" else "Thêm thẻ vào bộ $initialDeckName") },
         text = {
-            Column {
+            androidx.compose.foundation.layout.Column {
                 OutlinedTextField(value = front, onValueChange = { front = it }, label = { Text("Mặt trước (Câu hỏi)") })
                 OutlinedTextField(value = back, onValueChange = { back = it }, label = { Text("Mặt sau (Đáp án)") })
                 OutlinedTextField(
                     value = deck, 
                     onValueChange = { deck = it }, 
                     label = { Text("Tên bộ thẻ") },
-                    enabled = initialDeckName.isEmpty() // Không cho sửa tên bộ thẻ nếu nhấn từ bộ cụ thể
+                    enabled = initialDeckName.isEmpty()
                 )
             }
         },

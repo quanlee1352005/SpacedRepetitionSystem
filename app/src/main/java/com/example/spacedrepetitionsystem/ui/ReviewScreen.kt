@@ -13,19 +13,19 @@ import androidx.compose.material.icons.filled.VolumeUp
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ReviewScreen(
+    reviewList: List<Flashcard>, // Thêm tham số này để nhận danh sách thẻ từ MainActivity
     viewModel: FlashcardViewModel,
     onSpeak: (String) -> Unit,
     onFinish: () -> Unit
 ) {
-    val allCards by viewModel.allCards.collectAsState()
-    val currentTime = System.currentTimeMillis()
-    val reviewList = remember(allCards) { allCards.filter { it.nextDueDate <= currentTime } }
     var currentIndex by remember { mutableIntStateOf(0) }
     var showBack by remember { mutableStateOf(false) }
 
     Scaffold(
         topBar = { 
-            CenterAlignedTopAppBar(title = { Text("Đang học (${currentIndex + 1}/${reviewList.size})") }) 
+            CenterAlignedTopAppBar(title = { 
+                Text("Đang học (${if (reviewList.isEmpty()) 0 else currentIndex + 1}/${reviewList.size})") 
+            })
         }
     ) { innerPadding ->
         Box(modifier = Modifier.padding(innerPadding).fillMaxSize(), contentAlignment = Alignment.Center) {

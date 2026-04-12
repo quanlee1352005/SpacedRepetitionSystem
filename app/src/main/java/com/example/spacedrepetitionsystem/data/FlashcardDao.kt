@@ -6,14 +6,15 @@ import kotlinx.coroutines.flow.Flow
 
 @Dao
 interface FlashcardDao {
-    @Query("SELECT * FROM flashcards WHERE nextDueDate <= :currentTime ORDER BY nextDueDate ASC")
-    fun getCardsToReview(currentTime: Long): Flow<List<Flashcard>>
+    // Thêm userId vào Query để lọc đúng thẻ của người dùng
+    @Query("SELECT * FROM flashcards WHERE userId = :userId AND nextDueDate <= :currentTime ORDER BY nextDueDate ASC")
+    fun getCardsToReview(userId: String, currentTime: Long): Flow<List<Flashcard>>
 
-    @Query("SELECT * FROM flashcards")
-    fun getAllCards(): Flow<List<Flashcard>>
+    @Query("SELECT * FROM flashcards WHERE userId = :userId")
+    fun getAllCards(userId: String): Flow<List<Flashcard>>
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
-    suspend fun insertCard(flashcard: Flashcard): Long // Trả về ID để dùng cho đồng bộ
+    suspend fun insertCard(flashcard: Flashcard): Long
 
     @Update
     suspend fun updateCard(flashcard: Flashcard)

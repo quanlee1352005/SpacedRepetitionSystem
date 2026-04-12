@@ -23,7 +23,7 @@ import androidx.compose.ui.unit.sp
 @Composable
 fun DashboardScreen(
     viewModel: FlashcardViewModel,
-    userName: String = "Minh",
+    userName: String,
     onStartReview: () -> Unit,
     onCreateNewDeck: () -> Unit,
     onAddCardToDeck: (String) -> Unit,
@@ -37,8 +37,6 @@ fun DashboardScreen(
             .background(Color(0xFFFDEFD9))
     ) {
         HeaderSection(userName, onSync)
-        
-        // Quick Actions (Đổi tên thành Tạo bộ thẻ)
         QuickActionsSection(onStartReview, onCreateNewDeck)
 
         Text(
@@ -73,10 +71,7 @@ fun DeckCard(deck: DeckInfo, onClick: () -> Unit) {
     Card(
         shape = RoundedCornerShape(20.dp),
         colors = CardDefaults.cardColors(containerColor = Color(deck.color)),
-        modifier = Modifier
-            .fillMaxWidth()
-            .height(160.dp)
-            .clickable { onClick() },
+        modifier = Modifier.fillMaxWidth().height(160.dp).clickable { onClick() },
         elevation = CardDefaults.cardElevation(4.dp)
     ) {
         Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.SpaceBetween) {
@@ -84,19 +79,9 @@ fun DeckCard(deck: DeckInfo, onClick: () -> Unit) {
             Column {
                 Text(text = "${deck.cardCount} thẻ", color = Color.White.copy(alpha = 0.9f), fontSize = 12.sp)
                 Spacer(modifier = Modifier.height(4.dp))
-                LinearProgressIndicator(
-                    progress = { 1f }, 
-                    modifier = Modifier.fillMaxWidth().height(4.dp), 
-                    color = Color.White, 
-                    trackColor = Color.White.copy(alpha = 0.3f)
-                )
+                LinearProgressIndicator(progress = { 1f }, modifier = Modifier.fillMaxWidth().height(4.dp), color = Color.White, trackColor = Color.White.copy(alpha = 0.3f))
                 Spacer(modifier = Modifier.height(4.dp))
-                Text(
-                    text = if (deck.dueCount > 0) "Cần ôn tập: ${deck.dueCount}" else "Nhấn để thêm thẻ",
-                    color = Color.White,
-                    fontSize = 11.sp,
-                    fontWeight = FontWeight.Medium
-                )
+                Text(text = if (deck.dueCount > 0) "Cần ôn tập: ${deck.dueCount}" else "Đã hoàn thành", color = Color.White, fontSize = 11.sp, fontWeight = FontWeight.Medium)
             }
         }
     }

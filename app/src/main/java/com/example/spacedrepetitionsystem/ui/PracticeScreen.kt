@@ -1,9 +1,10 @@
 package com.example.spacedrepetitionsystem.ui
 
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Assignment
+import androidx.compose.material.icons.automirrored.filled.Assignment
 import androidx.compose.material.icons.filled.BarChart
 import androidx.compose.material.icons.filled.Psychology
 import androidx.compose.material3.*
@@ -18,7 +19,12 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 
 @Composable
-fun PracticeScreen(viewModel: FlashcardViewModel) {
+fun PracticeScreen(
+    viewModel: FlashcardViewModel,
+    onReviewDifficult: () -> Unit,
+    onLearnNew: () -> Unit,
+    onStartQuiz: () -> Unit
+) {
     val allCards by viewModel.allCards.collectAsState()
     val currentTime = System.currentTimeMillis()
     val dueCount = allCards.count { it.nextDueDate <= currentTime }
@@ -37,7 +43,6 @@ fun PracticeScreen(viewModel: FlashcardViewModel) {
             modifier = Modifier.padding(bottom = 24.dp)
         )
 
-        // Biểu đồ thống kê đơn giản
         Card(
             modifier = Modifier.fillMaxWidth().padding(bottom = 24.dp),
             shape = RoundedCornerShape(16.dp),
@@ -57,9 +62,29 @@ fun PracticeScreen(viewModel: FlashcardViewModel) {
             modifier = Modifier.align(Alignment.Start).padding(bottom = 16.dp)
         )
 
-        PracticeModeCard("Ôn tập SRS", "Học các thẻ đến hạn", Icons.Default.Psychology, Color(0xFFE67E22))
-        PracticeModeCard("Học thẻ mới", "Xem các thẻ chưa học", Icons.Default.Assignment, Color(0xFF42A5F5))
-        PracticeModeCard("Kiểm tra", "Làm bài test trắc nghiệm", Icons.Default.BarChart, Color(0xFF66BB6A))
+        PracticeModeCard(
+            title = "Ôn tập SRS", 
+            desc = "Học các thẻ khó hoặc quên", 
+            icon = Icons.Default.Psychology, 
+            color = Color(0xFFEF5350),
+            onClick = onReviewDifficult 
+        )
+        
+        PracticeModeCard(
+            title = "Học thẻ mới", 
+            desc = "Xem các thẻ đến hạn học", 
+            icon = Icons.AutoMirrored.Filled.Assignment,
+            color = Color(0xFF42A5F5), 
+            onClick = onLearnNew
+        )
+        
+        PracticeModeCard(
+            title = "Kiểm tra", 
+            desc = "Làm bài test 10 thẻ ngẫu nhiên", 
+            icon = Icons.Default.BarChart, 
+            color = Color(0xFF66BB6A), 
+            onClick = onStartQuiz
+        )
     }
 }
 
@@ -75,9 +100,12 @@ fun StatRow(label: String, value: String, color: Color) {
 }
 
 @Composable
-fun PracticeModeCard(title: String, desc: String, icon: ImageVector, color: Color) {
+fun PracticeModeCard(title: String, desc: String, icon: ImageVector, color: Color, onClick: () -> Unit) {
     Card(
-        modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp),
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(vertical = 8.dp)
+            .clickable { onClick() },
         shape = RoundedCornerShape(12.dp),
         colors = CardDefaults.cardColors(containerColor = Color.White)
     ) {
