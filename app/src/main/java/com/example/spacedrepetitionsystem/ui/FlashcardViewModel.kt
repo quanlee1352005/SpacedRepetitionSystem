@@ -19,7 +19,6 @@ class FlashcardViewModel(private val repository: FlashcardRepository) : ViewMode
 
     private val auth = FirebaseAuth.getInstance()
 
-    // Luồng lắng nghe trạng thái đăng nhập thay đổi để xóa/hiện thẻ ngay lập tức
     private val userIdFlow = callbackFlow<String> {
         val listener = FirebaseAuth.AuthStateListener { firebaseAuth ->
             trySend(firebaseAuth.currentUser?.uid ?: "")
@@ -39,8 +38,8 @@ class FlashcardViewModel(private val repository: FlashcardRepository) : ViewMode
     )
 
     val decks: StateFlow<List<DeckInfo>> = allCards.map { cards ->
+        val currentTime = System.currentTimeMillis()
         cards.groupBy { it.deckName }.map { (name, deckCards) ->
-            val currentTime = System.currentTimeMillis()
             DeckInfo(
                 name = name,
                 cardCount = deckCards.size,
@@ -50,20 +49,26 @@ class FlashcardViewModel(private val repository: FlashcardRepository) : ViewMode
         }
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
 
-    fun getCardsToReviewByDeck(deckName: String): Flow<List<Flashcard>> {
-        val currentTime = System.currentTimeMillis()
-        return allCards.map { cards ->
-            cards.filter { it.deckName == deckName && it.nextDueDate <= currentTime }
-        }
-    }
-
+    // 1. Học thẻ mới (Chỉ lấy thẻ đến hạn - Fix lỗi không biến mất)
     val learnCards: Flow<List<Flashcard>> = allCards.map { cards ->
         val currentTime = System.currentTimeMillis()
         cards.filter { it.nextDueDate <= currentTime }
     }
 
+    // 2. Ôn tập thẻ khó (PHẢI kiểm tra ngày đến hạn - Fix lỗi ấn Dễ vẫn hiện)
     val reviewDifficultCards: Flow<List<Flashcard>> = allCards.map { cards ->
-        cards.filter { it.easeFactor < 2.0 || (it.repetitions == 0 && it.id != 0) }
+        val currentTime = System.currentTimeMillis()
+        cards.filter { 
+            (it.easeFactor < 2.0 || it.repetitions == 0) && it.nextDueDate <= currentTime 
+        }
+    }
+
+    // 3. Học theo bộ (Fix lỗi currentTime bị cũ)
+    fun getCardsToReviewByDeck(deckName: String): Flow<List<Flashcard>> {
+        return allCards.map { cards ->
+            val currentTime = System.currentTimeMillis()
+            cards.filter { it.deckName == deckName && it.nextDueDate <= currentTime }
+        }
     }
 
     fun getQuizCards(): List<Flashcard> {
