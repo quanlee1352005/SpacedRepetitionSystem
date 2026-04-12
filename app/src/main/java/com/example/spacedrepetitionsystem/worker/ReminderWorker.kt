@@ -55,7 +55,6 @@ class ReminderWorker(
             .setAutoCancel(true)
             .build()
 
-        // Sử dụng kiểm tra quyền cực kỳ tường minh để làm vừa lòng Lint
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
             if (ActivityCompat.checkSelfPermission(applicationContext, Manifest.permission.POST_NOTIFICATIONS) == PackageManager.PERMISSION_GRANTED) {
                 notificationManager.notify(1, notification)

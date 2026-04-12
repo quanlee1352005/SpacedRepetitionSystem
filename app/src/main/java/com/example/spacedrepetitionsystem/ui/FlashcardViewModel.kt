@@ -19,6 +19,7 @@ class FlashcardViewModel(private val repository: FlashcardRepository) : ViewMode
 
     private val auth = FirebaseAuth.getInstance()
 
+    // Luồng lắng nghe trạng thái đăng nhập thay đổi để xóa/hiện thẻ ngay lập tức
     private val userIdFlow = callbackFlow<String> {
         val listener = FirebaseAuth.AuthStateListener { firebaseAuth ->
             trySend(firebaseAuth.currentUser?.uid ?: "")
@@ -49,6 +50,13 @@ class FlashcardViewModel(private val repository: FlashcardRepository) : ViewMode
         }
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
 
+    fun getCardsToReviewByDeck(deckName: String): Flow<List<Flashcard>> {
+        val currentTime = System.currentTimeMillis()
+        return allCards.map { cards ->
+            cards.filter { it.deckName == deckName && it.nextDueDate <= currentTime }
+        }
+    }
+
     val learnCards: Flow<List<Flashcard>> = allCards.map { cards ->
         val currentTime = System.currentTimeMillis()
         cards.filter { it.nextDueDate <= currentTime }
@@ -62,18 +70,15 @@ class FlashcardViewModel(private val repository: FlashcardRepository) : ViewMode
         return allCards.value.shuffled().take(10)
     }
 
+    fun deleteDeck(deckName: String) {
+        viewModelScope.launch { repository.deleteDeck(deckName) }
+    }
+
     fun addFlashcard(front: String, back: String, deckName: String) {
         val uid = auth.currentUser?.uid ?: return
         viewModelScope.launch {
             val color = generateColorFromName(deckName)
-            val newCard = Flashcard(
-                id = 0,
-                userId = uid,
-                front = front,
-                back = back,
-                deckName = deckName,
-                colorHex = color
-            )
+            val newCard = Flashcard(id = 0, userId = uid, front = front, back = back, deckName = deckName, colorHex = color)
             repository.insert(newCard)
         }
     }
