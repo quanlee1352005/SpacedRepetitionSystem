@@ -9,7 +9,6 @@ import android.content.pm.PackageManager
 import android.os.Build
 import androidx.core.app.ActivityCompat
 import androidx.core.app.NotificationCompat
-import androidx.core.app.NotificationManagerCompat
 import androidx.work.CoroutineWorker
 import androidx.work.WorkerParameters
 import com.example.spacedrepetitionsystem.data.AppDatabase
@@ -34,18 +33,20 @@ class ReminderWorker(
         return Result.success()
     }
 
-    @SuppressLint("MissingPermission")
+    @SuppressLint("MissingPermission", "NewApi")
     private fun showNotification(count: Int) {
         val channelId = "srs_reminder_channel"
+        val notificationManager = applicationContext.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
         
-        // 1. Tạo Channel (Bắt buộc từ Android 8.0+)
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            val notificationManager = applicationContext.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
-            val channel = NotificationChannel(channelId, "SRS Reminder", NotificationManager.IMPORTANCE_DEFAULT)
+            val channel = NotificationChannel(
+                channelId, 
+                "SRS Reminder", 
+                NotificationManager.IMPORTANCE_DEFAULT
+            )
             notificationManager.createNotificationChannel(channel)
         }
 
-        // 2. Xây dựng nội dung thông báo
         val notification = NotificationCompat.Builder(applicationContext, channelId)
             .setSmallIcon(android.R.drawable.ic_dialog_info)
             .setContentTitle("Thời gian ôn tập!")
@@ -54,15 +55,13 @@ class ReminderWorker(
             .setAutoCancel(true)
             .build()
 
-        // 3. Kiểm tra quyền và Hiển thị
-        val hasPermission = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-            ActivityCompat.checkSelfPermission(applicationContext, Manifest.permission.POST_NOTIFICATIONS) == PackageManager.PERMISSION_GRANTED
+        // Sử dụng kiểm tra quyền cực kỳ tường minh để làm vừa lòng Lint
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            if (ActivityCompat.checkSelfPermission(applicationContext, Manifest.permission.POST_NOTIFICATIONS) == PackageManager.PERMISSION_GRANTED) {
+                notificationManager.notify(1, notification)
+            }
         } else {
-            true
-        }
-
-        if (hasPermission) {
-            NotificationManagerCompat.from(applicationContext).notify(1, notification)
+            notificationManager.notify(1, notification)
         }
     }
 }
