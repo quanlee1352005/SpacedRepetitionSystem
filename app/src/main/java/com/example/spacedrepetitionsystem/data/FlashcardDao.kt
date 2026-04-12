@@ -6,7 +6,6 @@ import kotlinx.coroutines.flow.Flow
 
 @Dao
 interface FlashcardDao {
-    // Thêm userId vào Query để lọc đúng thẻ của người dùng
     @Query("SELECT * FROM flashcards WHERE userId = :userId AND nextDueDate <= :currentTime ORDER BY nextDueDate ASC")
     fun getCardsToReview(userId: String, currentTime: Long): Flow<List<Flashcard>>
 
@@ -21,4 +20,8 @@ interface FlashcardDao {
 
     @Delete
     suspend fun deleteCard(flashcard: Flashcard)
+
+    // Xóa nguyên bộ thẻ
+    @Query("DELETE FROM flashcards WHERE userId = :userId AND deckName = :deckName")
+    suspend fun deleteDeck(userId: String, deckName: String)
 }

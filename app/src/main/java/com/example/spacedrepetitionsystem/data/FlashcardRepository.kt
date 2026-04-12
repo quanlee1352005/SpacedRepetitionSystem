@@ -12,7 +12,6 @@ class FlashcardRepository(private val flashcardDao: FlashcardDao) {
     private val firestore = FirebaseFirestore.getInstance()
     private val auth = FirebaseAuth.getInstance()
     
-    // Hàm lấy danh sách thẻ theo userId
     fun getUserCards(userId: String): Flow<List<Flashcard>> {
         if (userId.isEmpty()) return flowOf(emptyList())
         return flashcardDao.getAllCards(userId)
@@ -40,6 +39,23 @@ class FlashcardRepository(private val flashcardDao: FlashcardDao) {
             firestore.collection("users").document(currentUserId)
                 .collection("flashcards").document(flashcard.id.toString())
                 .delete().await()
+        } catch (e: Exception) { e.printStackTrace() }
+    }
+
+    // Xóa nguyên bộ thẻ (Thêm hàm này để fix lỗi ViewModel)
+    suspend fun deleteDeck(deckName: String) {
+        if (currentUserId.isEmpty()) return
+        
+        // 1. Xóa ở Room
+        flashcardDao.deleteDeck(currentUserId, deckName)
+        
+        // 2. Xóa ở Cloud
+        try {
+            val snapshot = firestore.collection("users").document(currentUserId)
+                .collection("flashcards").whereEqualTo("deckName", deckName).get().await()
+            for (doc in snapshot.documents) {
+                doc.reference.delete().await()
+            }
         } catch (e: Exception) { e.printStackTrace() }
     }
 

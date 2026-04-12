@@ -78,9 +78,13 @@ class MainActivity : ComponentActivity(), TextToSpeech.OnInitListener {
                                 "home" -> DashboardScreen(
                                     viewModel = viewModel,
                                     userName = auth.currentUser?.email ?: "Người dùng",
-                                    onStartReview = {
+                                    onStartReviewByDeck = { deckName ->
                                         scope.launch {
-                                            currentReviewList = viewModel.learnCards.first()
+                                            currentReviewList = if (deckName == "Tất cả") {
+                                                viewModel.learnCards.first()
+                                            } else {
+                                                viewModel.getCardsToReviewByDeck(deckName).first()
+                                            }
                                             isReviewing = true
                                         }
                                     },
@@ -92,7 +96,10 @@ class MainActivity : ComponentActivity(), TextToSpeech.OnInitListener {
                                         prefilledDeckName = deckName
                                         showAddDialog = true
                                     },
-                                    onSync = { viewModel.syncFromCloud() }
+                                    onSync = { 
+                                        viewModel.syncFromCloud()
+                                        Toast.makeText(this@MainActivity, "Đang đồng bộ...", Toast.LENGTH_SHORT).show()
+                                    }
                                 )
                                 "library" -> LibraryScreen(viewModel)
                                 "practice" -> PracticeScreen(
@@ -227,7 +234,7 @@ fun AddCardDialog(initialDeckName: String, onDismiss: () -> Unit, onConfirm: (St
         onDismissRequest = onDismiss,
         title = { Text(if (initialDeckName.isEmpty()) "Tạo bộ thẻ mới" else "Thêm thẻ vào bộ $initialDeckName") },
         text = {
-            androidx.compose.foundation.layout.Column {
+            Column {
                 OutlinedTextField(value = front, onValueChange = { front = it }, label = { Text("Mặt trước (Câu hỏi)") })
                 OutlinedTextField(value = back, onValueChange = { back = it }, label = { Text("Mặt sau (Đáp án)") })
                 OutlinedTextField(
